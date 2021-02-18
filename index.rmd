@@ -1,0 +1,70 @@
+---
+title: PA3
+author: Kyle Parrish
+date: February 18, 2021
+output: html_document
+---
+
+I chose to use the dataset `lexdec`. It appears to be the results of a lexical decision task in English done by both English L1 speakers, and those who have learned English. The results are measured by correctness and reaction times. I looked at reaction time as a function of frequency in English L1 speakers, and those who have learned English. 
+
+
+
+
+# Libraries 
+```{r}
+library(tidyverse)
+library(languageR)
+
+```
+
+
+# Descriptive statistics. 
+
+I piped the `df` into `group_by` and then `summarize` to compare the mean RTs of both groups. Then, I did a t-test to see whether this difference was significant. It looks like it was, since p = 2.2e-16. This P value tells me that the difference between my two means is very likely not to be zero. However, it looks like it's a very small, and perhaps not important, difference, given that the effect size looks to be very small. 
+
+```{r}
+
+lexdec %>% 
+  group_by(NativeLanguage) %>% 
+  summarize(mean_rt = mean(RT), sd_rt = sd(RT), n = n())
+
+lexdec_other = lexdec %>% 
+  filter(NativeLanguage == "Other")
+
+lexdec_english = lexdec %>% 
+  filter(NativeLanguage == "English")
+
+t.test(lexdec_english$RT, lexdec_other$RT)
+
+```
+Here I fit models to both groups using `lm`, so that they I get a best fitting line equation for both the English group and the Other group. 
+
+
+# Fitting a model to investigate RT as a funcition of frequency 
+```{r}
+
+model_english <- lm(lexdec_english$RT ~ lexdec_english$Frequency)
+
+model_other <- lm(lexdec_other$RT ~ lexdec_other$Frequency)
+
+summary(model_english)
+
+summary(model_other)
+
+
+```
+
+Here is the plot using `ggplot2` 
+
+# Plotting RTs in the lexical decision task by langauge group
+
+```{r}
+
+ggplot(lexdec, aes(x = Frequency, y = RT, color = NativeLanguage)) + geom_point(alpha = .4, color = "gray") + geom_smooth(method = "lm")
+
+
+```
+
+# Obvervations 
+
+This was a very beneficial assignment! The dataset I chose was already rather tidy, so I did not have to use `pivot_wider` or `pivot_longer`. The results that I found seem to be a good example of why p-values alone aren't a good nor reliable way to report whether a finding is actually "significant", since the p-value reports how sure one is that differences in means is not equal to zero. As a dataset grows, so does the probablility that one will have a significant p-value.
